@@ -3,7 +3,7 @@ This is the project page for the paper "DeepISP ..."
 link
 
 ### teaser
-![image-title-here](./figures/teaser_ll_ours_full.jpg){:class="img-responsive"}
+![image-title-here](./figures/teaser_ll_ours_full.png){:class="img-responsive"}
 
 
 You can use the [editor on GitHub](https://github.com/EliSchwartz/DeepISP/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
