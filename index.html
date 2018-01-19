@@ -1,0 +1,2184 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+		<meta name="author" content="Dana Berman">
+		<meta name="keywords" content="Dana Berman, Tali Treibitz, Shai Avidan, Scattering media, dehazing, haze removal, Non-Local, CVPR, 2016">
+		<meta name="description" content="Additional results for CVPR 2016 paper: Non-Local Image Dehazing. Dana Berman, Tali Treibitz, Shai Avidan.">
+		<link rel="canonical" href="www.eng.tau.ac.il/~berman/NonLocalDehazing" />
+		<link rel="icon" href="https://english.tau.ac.il/sites/default/files/TAU_1.ico">
+
+		<title>Non-Local Image Dehazing</title>
+		
+		<!-- Bootstrap core CSS -->
+		<link href="../dist/css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+		<link href="../dist/css/ie10-viewport-bug-workaround.css" rel="stylesheet">	
+		
+		<!-- Custom styles for this page -->
+		<link rel="stylesheet" type="text/css" href="../default.css">
+		<link rel="stylesheet" type="text/css" href="./files/NonLocalDehazing.css">
+		
+		<!-- Image display functions -->
+		<script type="text/JavaScript">
+			<!--
+			function MM_preloadImages() { //v3.0
+			 var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
+			  var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
+			  if (a[i].indexOf("#")!=0){ d.MM_p[j]=new Image; d.MM_p[j++].src=a[i];}}
+			}
+
+			function MM_swapImgRestore() { //v3.0
+			 var i,x,a=document.MM_sr; for(i=0;a&&i<a.length&&(x=a[i])&&x.oSrc;i++) x.src=x.oSrc;
+			}
+
+			function MM_findObj(n, d) { //v4.01
+			 var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+			  d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+			 if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+			 for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+			 if(!x && d.getElementById) x=d.getElementById(n); return x;
+			}
+
+			function MM_swapImage() { //v3.0
+			 var i,j=0,x,a=MM_swapImage.arguments; document.MM_sr=new Array; for(i=0;i<(a.length-2);i+=3)
+			 if ((x=MM_findObj(a[i]))!=null){document.MM_sr[j++]=x; if(!x.oSrc) x.oSrc=x.src; x.src=a[i+2];}
+			}
+			
+			function mark(el, color) {
+			el.style.border = "2px solid blue";
+		}
+			//-->
+		</script>
+		
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+		  ga('create', 'UA-90725514-1', 'auto');
+		  ga('send', 'pageview');
+
+		</script>
+		
+	</head>
+
+	<body onload="MM_preloadImages('./files/108005.jpg',
+'./files/108005_kmeans_500clusters_psnr39-79dB.jpg',
+'./files/144067.jpg',
+'./files/144067_kmeans_500clusters_psnr41-21dB.jpg',
+'./files/219090.jpg',
+'./files/219090_kmeans_500clusters_psnr43-70dB.jpg',
+'./files/68077.jpg',
+'./files/68077_kmeans_500clusters_psnr39-37dB.jpg',
+'./files/church_S50_cl.jpg',
+'./files/church_S50_dc.jpg',
+'./files/church_S50_hl.jpg',
+'./files/church_S50_input.jpg',
+'./files/church_S50_known.jpg',
+'./files/church_S50_ours.jpg',
+'./files/church_S50_trans_cl.jpg',
+'./files/church_S50_trans_dc.jpg',
+'./files/church_S50_trans_hl.jpg',
+'./files/church_S50_trans_ours.jpg',
+'./files/church_S50_trans_true.jpg',
+'./files/cones_cl.jpg',
+'./files/cones_dc.jpg',
+'./files/cones_gibson13.jpg',
+'./files/cones_hl.jpg',
+'./files/cones_input.jpg',
+'./files/cones_nishino.jpg',
+'./files/cones_Tarel.jpg',
+'./files/flags_blind.jpg',
+'./files/flags_cl.jpg',
+'./files/flags_dc.jpg',
+'./files/flags_hl.jpg',
+'./files/flags_trans_blind.png',
+'./files/flags_trans_cl.png',
+'./files/flags_trans_dc.png',
+'./files/flags_trans_hl.png',
+'./files/flags_input.jpg',
+'./files/florence_cl.jpg',
+'./files/florence_dc.jpg',
+'./files/florence_hl.jpg',
+'./files/florence_input.jpg',
+'./files/flower1_cl.jpg',
+'./files/flower1_dc.jpg',
+'./files/flower1_hl.jpg',
+'./files/flower1_input.jpg',
+'./files/flower1_ours.jpg',
+'./files/flower1_trans_cl.jpg',
+'./files/flower1_trans_dc.jpg',
+'./files/flower1_trans_hl.jpg',
+'./files/flower1_trans_ours.jpg',
+'./files/flower1_trans_true.jpg',
+'./files/flower1_true.jpg',
+'./files/forest_cl.jpg',
+'./files/forest_dc.jpg',
+'./files/forest_hl.jpg',
+'./files/forest_input.jpg',
+'./files/forest_trans_cl.jpg',
+'./files/forest_trans_dc.jpg',
+'./files/forest_trans_hl.jpg',
+'./files/hazyDay_dc.jpg',
+'./files/hazyDay_hl.jpg',
+'./files/hazyDay_input.jpg',
+'./files/hazyDay_learning.jpg',
+'./files/house_cl.jpg',
+'./files/house_colorEllipsoid.jpg',
+'./files/house_dc.jpg',
+'./files/house_GraylevelTarelHautiere.jpg',
+'./files/house_hl.jpg',
+'./files/house_input.jpg',
+'./files/house_learning.jpg',
+'./files/house_nishino.jpg',
+'./files/L1_errors.png',
+'./files/lawn1_S25_cl.jpg',
+'./files/lawn1_S25_dc.jpg',
+'./files/lawn1_S25_fat.jpg',
+'./files/lawn1_S25_hl.jpg',
+'./files/lawn1_S25_input.jpg',
+'./files/lawn1_S25_known.jpg',
+'./files/lawn1_S25_trans_cl.jpg',
+'./files/lawn1_S25_trans_dc.jpg',
+'./files/lawn1_S25_trans_fat.jpg',
+'./files/lawn1_S25_trans_hl.jpg',
+'./files/lawn1_S25_trans_true.jpg',
+'./files/lawn1_S25_true.jpg',
+'./files/lawn2_cl.jpg',
+'./files/lawn2_dc.jpg',
+'./files/lawn2_hl.jpg',
+'./files/lawn2_input.jpg',
+'./files/lawn2_trans_cl.jpg',
+'./files/lawn2_trans_dc.jpg',
+'./files/lawn2_trans_hl.jpg',
+'./files/lawn2_trans_true.jpg',
+'./files/lawn2_true.jpg',
+'./files/lviv_cl.jpg',
+'./files/lviv_dc.jpg',
+'./files/lviv_hl.jpg',
+'./files/lviv_input.jpg',
+'./files/lviv_trans_cl.jpg',
+'./files/lviv_trans_dc.jpg',
+'./files/lviv_trans_hl.jpg',
+'./files/ny17_ancuti.jpg',
+'./files/ny17_cl.jpg',
+'./files/ny17_dc.jpg',
+'./files/ny17_deepphoto.jpg',
+'./files/ny17_hl.jpg',
+'./files/ny17_input.jpg',
+'./files/ny17_nishino.jpg',
+'./files/ny17_tan.jpg',
+'./files/ny17_tarel.jpg',
+'./files/pumpkins_cl.jpg',
+'./files/pumpkins_dc.jpg',
+'./files/pumpkins_hl.jpg',
+'./files/pumpkins_input.jpg',
+'./files/pumpkins_nishino.jpg',
+'./files/pumpkins_trans_cl.jpg',
+'./files/pumpkins_trans_dc.jpg',
+'./files/pumpkins_trans_hl.jpg',
+'./files/pumpkins_trans_nishino.jpg',
+'./files/road1_S50_cl.jpg',
+'./files/road1_S50_dc.jpg',
+'./files/road1_S50_hl.jpg',
+'./files/road1_S50_input.jpg',
+'./files/road1_S50_known.jpg',
+'./files/road1_S50_trans_cl.jpg',
+'./files/road1_S50_trans_dc.jpg',
+'./files/road1_S50_trans_hl.jpg',
+'./files/road1_S50_trans_true.jpg',
+'./files/road1_S50_true.jpg',
+'./files/road2_cl.jpg',
+'./files/road2_dc.jpg',
+'./files/road2_hl.jpg',
+'./files/road2_input.jpg',
+'./files/road2_trans_cl.jpg',
+'./files/road2_trans_dc.jpg',
+'./files/road2_trans_fat.jpg',
+'./files/road2_trans_hl.jpg',
+'./files/road2_trans_true.jpg',
+'./files/road2_true.jpg',
+'./files/stadium_cl.jpg',
+'./files/stadium_dc.jpg',
+'./files/stadium_hl.jpg',
+'./files/stadium_input.jpg',
+'./files/stadium_nishino.jpg',
+'./files/stadium_tan.jpg',
+'./files/swan_cl.jpg',
+'./files/swan_dc.jpg',
+'./files/swan_GraylevelTarelHautiere.jpg',
+'./files/swan_hl.jpg',
+'./files/swan_input.jpg',
+'./files/swan_nishino.jpg',
+'./files/swan_ours.jpg',
+'./files/swan_tan.jpg',
+'./files/train_ancuti.jpg',
+'./files/train_cl.jpg',
+'./files/train_dc.jpg',
+'./files/train_hl.jpg',
+'./files/train_input.jpg',
+'./files/train_osa.jpg',
+'./files/train_ours.jpg'
+)">  <!--unnecessary for local files-->
+
+    <div class="container">
+		<div class="page-header text-center">
+			<h1>Non-Local Image Dehazing</h1>
+			<div class="h3link"><a href="../index.html">Dana Berman</a>, <a href="http://marsci.haifa.ac.il/profiles/tTreibitz/">Tali Treibitz</a>, <a href="http://www.eng.tau.ac.il/~avidan/">Shai Avidan</a></div>
+			<BR>
+		</div> <!-- class="page-header" -->
+		
+		
+		<h2>Publication</h2>
+		<p>
+			Non-Local Image Dehazing. Berman, D. and Treibitz, T. and Avidan S., CVPR 2016
+		</p>
+		<p>
+			<a href="NonLocalDehazing_CVPR2016.pdf"><img src="../images/pdf_icon.png" alt="paper" height=40px"></a> &nbsp;
+			<a href="NonLocalDehazing.bib"><img src="../images/bib_icon.png" alt="paper" height=40px"></a> &nbsp;
+		</p>
+		
+		<hr>
+				
+		<h2 id="SourceCode">Source Code</h2>
+		<p>
+			The software code of Non-Local Image Dehazing is provided under <a href="Non-commercial_copyright_license.rtf">this license agreement</a>.  &nbsp; <a href="https://github.com/danaberman/non-local-dehazing"><img src="../images/matlab_icon.png" alt="matlab source code" height=40px"></a>
+		</p>
+
+		<hr>
+		
+		<h2>Abstract</h2>
+		<div class="row">
+			<div class="col-xs-12 col-sm-9">	
+				<p>
+				Haze limits visibility and reduces image contrast in outdoor images. The degradation is different for every pixel and depends on the distance of the scene point from the camera. This dependency is expressed in the transmission coefficients, that control the scene attenuation and amount of haze in every pixel. 
+				Previous methods solve the single image dehazing problem using various patch-based priors. We, on the other hand, propose an algorithm based on a new, non-local prior. 
+				The algorithm relies on the assumption that colors of a haze-free image are well approximated by a few hundred distinct colors, that form tight clusters in RGB space. Our key observation is that pixels in a given cluster are often non-local, i.e., they are spread over the entire image plane and are located at different distances from the camera. In the presence of haze these varying distances translate to different transmission coefficients. Therefore, each color cluster in the clear image becomes a line in RGB space, that we term a haze-line. Using these haze-lines, our algorithm recovers both the distance map and the haze-free image. The algorithm is linear in the size of the image, deterministic and requires no training. It performs well on a wide variety of images and is 	competitive with other state-of-the-art methods. 
+				</p>
+				<p><a href="NonLocalDehazing_VisionDay2015slides.pdf">Slides</a> of a 20 minutes talk, given at the <a href="http://cs.haifa.ac.il/hagit/VisionDay/schedule2015.html">Vision Day</a> </p>    
+			</div>
+			<div class="col-sm-3 div-to-hide">
+				<div >				
+					<img class="img-responsive" src="../images/cityscape_half.jpg" />
+				</div>   				
+			</div>
+		</div>
+		
+		<hr>
+		
+		<h2>Non-Local Prior</h2>
+		<div class="row">
+			<div class="col-xs-12 col-sm-7">	
+				<p>
+				Our method is based on the observation that the number of distinct colors in an image is orders of magnitude smaller than the number of pixels.<br>
+				The observation regarding a small number of distinct colors holds for haze-free images. In the presence of haze, object points that belong to the same color cluster end up with different acquired colors, since they are located in disparate image areas and thus have different distances from the camera. This prior suggests that pixels clustered together in a haze-free image form a line in RGB space in a hazy image. 
+				Based on Eq. (1), the two end points of the line are the original color J and the airlight A. These are the haze-lines.<br>
+				This prior is demonstrated in Fig: Non-Local Prior. A haze-free image is clustered using K-means to 500 clusters. The pixels belonging to four of these clusters are marked by different color markers in (a) and their RGB coordinates are plotted in (b), demonstrating tight clusters. 
+				Note that the clusters include pixels distributed over the entire image that come from objects with different distances from the camera. <br>
+				A synthetic hazy image (c) was generated from the clear image. The same pixels as in (a) are marked. However, now, colors of pixels that belonged to the same color cluster are no longer similar. 
+				This is depicted in RGB space in (d), where the color coordinates of these pixels are distributed along a haze-line spanned by the original color and the airlight. The pixels marked by purple circles (originating from the sand patch) are located in similar distances, so their distribution along the haze-line is rather tight. However, the pixels marked by orange triangles (grassy areas) are found at different locations in the real world, so they are distributed along the haze-line.
+ 
+				</p>
+			</div>
+			<div class="col-xs-12 col-sm-5">
+				<div >				
+					<img class="img-responsive" src="./files/prior.png" />
+					<p align="center">Fig: Non-Local Prior</p>
+				</div>   				
+			</div>
+		</div>
+		
+		<hr>
+		
+		<h2>Results</h2>
+		<p>
+		This section contains additional results which complement the paper:<br>
+		1) Various images <a href="#ColorQuantization">before and after color-quantization</a>, to support our prior. All the images are from the Berkeley Segmentation Dataset.  
+		<br>
+		2) A comparison of our single image dehazing method to state-of-the-art algorithms. We compare:<br>
+
+		&nbsp&nbsp&nbsp a) <a href="#Natural">Natural Images</a> <br>
+		&nbsp&nbsp&nbsp b) <a href="#Synthetic">Synthetic Images</a> <br>
+		&nbsp&nbsp&nbsp c) <a href="#Noisy">Noisy Synthetic Images</a><br>
+		</p>
+
+		<p>
+		To switch between images please use the colored buttons on the left. 
+		Please note that the result images are initialized to <span style="background-color: #4e70e0"> <b> our results </b></span>.<br>
+		A complete <a href="#References">list of references</a> is given at the end.
+		</p>
+	
+<!------------------------------------------------------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------------------------------------------------------>
+		<HR>
+		<a name="ColorQuantization"> </a><h3>Color Quantized Images</h3>
+
+		<p>
+		Our method is based on the observation that the number of distinct colors in an image is orders of magnitude smaller than the number of pixels. This assumption is used for saving color images using indexed colormaps. 
+		We validate and quantify it on the Berkeley Segmentation Dataset: we clustered the RGB pixel values using K-means to a maximum of 500 clusters, and replaced every pixel in the image with its respective cluster center. The result is an image with 500 different RGB values at most (two orders of magnitude smaller than image size).
+		We show a random selection of outdoor scenes, before and after the color quantization.
+		</p>
+
+		<table>
+			<tr>
+				<td valign ="top">
+					<button type="button" class="Original" id="108005" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('108005_quan').style.fontWeight='normal';
+					  MM_swapImage('auto_img_108005','','./files/108005.jpg',1);
+					  document.getElementById('auto_img_108005').style.border='5px solid #773333'">
+					  Original
+					</button>
+					<button type="button" class="ColorQuantized" id="108005_quan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('108005').style.fontWeight='normal';
+					  MM_swapImage('auto_img_108005','','./files/108005_kmeans_500clusters_psnr39-79dB.jpg',1);
+					  document.getElementById('auto_img_108005').style.border='5px solid #BEBcAb'">
+					  Color Quantized,<br>PSNR = 39.79dB
+					</button>
+				</td>
+				<td><div><img src="./files/108005_kmeans_500clusters_psnr39-79dB.jpg" style="border:5px solid #BEBcAb" height="321" width="481" alt="Color-quantized image" id="auto_img_108005" /></div></td>
+			</tr>
+		</table>
+
+		<table>
+			<tr>
+				<td valign ="top">
+					<button type="button" class="Original" id="144067" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('144067_quan').style.fontWeight='normal';
+					  MM_swapImage('auto_img_144067','','./files/144067.jpg',1);
+					  document.getElementById('auto_img_144067').style.border='5px solid #773333'">
+					  Original
+					</button>
+					<button type="button" class="ColorQuantized" id="144067_quan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('144067').style.fontWeight='normal';
+					  MM_swapImage('auto_img_144067','','./files/144067_kmeans_500clusters_psnr41-21dB.jpg',1);
+					  document.getElementById('auto_img_144067').style.border='5px solid #BEBcAb'">
+					  Color Quantized,<br>PSNR = 41.21dB
+					</button>
+				</td>
+				<td><div><img src="./files/144067_kmeans_500clusters_psnr41-21dB.jpg" style="border:5px solid #BEBcAb" height="481" width="321" alt="Color-quantized image" id="auto_img_144067" /></div></td>
+			</tr>
+		</table>
+
+		<table>
+			<tr>
+				<td valign ="top">
+					<button type="button" class="Original" id="68077" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('68077_quan').style.fontWeight='normal';
+					  MM_swapImage('auto_img_68077','','./files/68077.jpg',1);
+					  document.getElementById('auto_img_68077').style.border='5px solid #773333'">
+					  Original
+					</button>
+					<button type="button" class="ColorQuantized" id="68077_quan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('68077').style.fontWeight='normal';
+					  MM_swapImage('auto_img_68077','','./files/68077_kmeans_500clusters_psnr39-37dB.jpg',1);
+					  document.getElementById('auto_img_68077').style.border='5px solid #BEBcAb'">
+					  Color Quantized,<br>PSNR = 41.21dB
+					</button>
+				</td>
+				<td><div><img src="./files/68077_kmeans_500clusters_psnr39-37dB.jpg" style="border:5px solid #BEBcAb" height="321" width="481" alt="Color-quantized image" id="auto_img_68077" /></div></td>
+			</tr>
+		</table>
+
+		<table>
+			<tr>
+				<td valign ="top">
+					<button type="button" class="Original" id="219090" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('219090_quan').style.fontWeight='normal';
+					  MM_swapImage('auto_img_219090','','./files/219090.jpg',1);
+					  document.getElementById('auto_img_219090').style.border='5px solid #773333'">
+					  Original
+					</button>
+					<button type="button" class="ColorQuantized" id="219090_quan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('219090').style.fontWeight='normal';
+					  MM_swapImage('auto_img_219090','','./files/219090_kmeans_500clusters_psnr43-70dB.jpg',1);
+					  document.getElementById('auto_img_219090').style.border='5px solid #BEBcAb'">
+					  Color Quantized,<br>PSNR = 43.70dB
+					</button>
+				</td>
+				<td><div><img src="./files/219090_kmeans_500clusters_psnr43-70dB.jpg" style="border:5px solid #BEBcAb" height="321" width="481" alt="Color-quantized image" id="auto_img_219090" /></div></td>
+			</tr>
+		</table>
+
+
+<!------------------------------------------------------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------------------------------------------------------>
+		<HR>
+		<a name="Natural"> </a><h3>Natural Images</h3>
+
+		<h4>Lviv</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/lviv_input.jpg" style="border:5px solid black" height="731" width="1000" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="lviv_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lviv_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_hl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_dc').style.fontWeight='bold';
+					  document.getElementById('lviv_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lviv','','./files/lviv_dc.jpg',1);
+					  document.getElementById('auto_img_lviv').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_lviv','','./files/lviv_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_lviv').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="lviv_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lviv_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_hl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_cl').style.fontWeight='bold';
+					  document.getElementById('lviv_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_lviv','','./files/lviv_cl.jpg',1);
+					  document.getElementById('auto_img_lviv').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_lviv','','./files/lviv_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_lviv').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="lviv_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lviv_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_lviv','','./files/lviv_hl.jpg',1);
+					  document.getElementById('auto_img_lviv').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_lviv','','./files/lviv_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_lviv').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/lviv_hl.jpg" style="border:5px solid #4e70e0" height="731" width="1000" alt="Dehazed Image" id="auto_img_lviv" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="lviv_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lviv_dc').style.fontWeight='bold';
+					  document.getElementById('lviv_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_hl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lviv','','./files/lviv_dc.jpg',1);
+					  document.getElementById('auto_img_lviv').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_lviv','','./files/lviv_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_lviv').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="lviv_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lviv_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_cl').style.fontWeight='bold';
+					  document.getElementById('lviv_hl').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lviv','','./files/lviv_cl.jpg',1);
+					  document.getElementById('auto_img_lviv').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_lviv','','./files/lviv_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_lviv').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="lviv_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lviv_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_cl').style.fontWeight='normal';
+					  document.getElementById('lviv_hl').style.fontWeight='bold';
+					  document.getElementById('lviv_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lviv_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lviv','','./files/lviv_hl.jpg',1);
+					  document.getElementById('auto_img_lviv').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_lviv','','./files/lviv_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_lviv').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/lviv_trans_hl.jpg" style="border:5px solid #4e70e0" height="731" width="1000" alt="Transmission Map" id="auto_trans_lviv" /></div></td>
+			</tr>
+		</table>
+		
+		<h4>Stadium</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/stadium_input.jpg" style="border:5px solid black" height="326" width="1000" alt="Stadium Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="tan" id="stadium_tan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('stadium_dc').style.fontWeight='normal';
+					  document.getElementById('stadium_nishino').style.fontWeight='normal';
+					  document.getElementById('stadium_cl').style.fontWeight='normal';
+					  document.getElementById('stadium_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_stadium','','./files/stadium_tan.jpg',1);
+					  document.getElementById('auto_img_stadium').style.border='5px solid #853e63'">
+					  [Tan 2008]
+					</button>
+					<button type="button" class="dc" id="stadium_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('stadium_tan').style.fontWeight='normal';
+					  document.getElementById('stadium_nishino').style.fontWeight='normal';
+					  document.getElementById('stadium_cl').style.fontWeight='normal';
+					  document.getElementById('stadium_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_stadium','','./files/stadium_dc.jpg',1);
+					  document.getElementById('auto_img_stadium').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="nishino" id="stadium_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('stadium_dc').style.fontWeight='normal';
+					  document.getElementById('stadium_tan').style.fontWeight='normal';
+					  document.getElementById('stadium_cl').style.fontWeight='normal';
+					  document.getElementById('stadium_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_stadium','','./files/stadium_nishino.jpg',1);
+					  document.getElementById('auto_img_stadium').style.border='5px solid #beeded'">
+					  [Nishino 2012]
+					</button>
+					<button type="button" class="cl" id="stadium_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('stadium_tan').style.fontWeight='normal';
+					  document.getElementById('stadium_dc').style.fontWeight='normal';
+					  document.getElementById('stadium_nishino').style.fontWeight='normal';
+					  document.getElementById('stadium_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_stadium','','./files/stadium_cl.jpg',1);
+					  document.getElementById('auto_img_stadium').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="stadium_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('stadium_tan').style.fontWeight='normal';
+					  document.getElementById('stadium_dc').style.fontWeight='normal';
+					  document.getElementById('stadium_nishino').style.fontWeight='normal';
+					  document.getElementById('stadium_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_stadium','','./files/stadium_hl.jpg',1);
+					  document.getElementById('auto_img_stadium').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/stadium_hl.jpg" style="border:5px solid #4e70e0" height="326" width="1000" alt="Dehazed Image" id="auto_img_stadium" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Wheat Field</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/cones_input.jpg" style="border:5px solid black" height="384" width="512" alt="cones Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="cones_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('cones_nishino').style.fontWeight='normal';
+					  document.getElementById('cones_tarel').style.fontWeight='normal';
+					  document.getElementById('cones_gibson').style.fontWeight='normal';
+					  document.getElementById('cones_cl').style.fontWeight='normal';
+					  document.getElementById('cones_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_cones','','./files/cones_dc.jpg',1);
+					  document.getElementById('auto_img_cones').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="tarel" id="cones_tarel" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('cones_nishino').style.fontWeight='normal';
+					  document.getElementById('cones_dc').style.fontWeight='normal';
+					  document.getElementById('cones_gibson').style.fontWeight='normal';
+					  document.getElementById('cones_cl').style.fontWeight='normal';
+					  document.getElementById('cones_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_cones','','./files/cones_Tarel.jpg',1);
+					  document.getElementById('auto_img_cones').style.border='5px solid #32518A'">
+					  [Tarel and Hauti&egravere 2009]
+					</button>
+					<button type="button" class="nishino" id="cones_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('cones_tarel').style.fontWeight='normal';
+					  document.getElementById('cones_dc').style.fontWeight='normal';
+					  document.getElementById('cones_gibson').style.fontWeight='normal';
+					  document.getElementById('cones_cl').style.fontWeight='normal';
+					  document.getElementById('cones_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_cones','','./files/cones_nishino.jpg',1);
+					  document.getElementById('auto_img_cones').style.border='5px solid #beeded'">
+					  [Nishino et al. 2012]
+					</button>
+					<button type="button" class="gibson" id="cones_gibson" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('cones_nishino').style.fontWeight='normal';
+					  document.getElementById('cones_dc').style.fontWeight='normal';
+					  document.getElementById('cones_tarel').style.fontWeight='normal';
+					  document.getElementById('cones_cl').style.fontWeight='normal';
+					  document.getElementById('cones_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_cones','','./files/cones_gibson13.jpg',1);
+					  document.getElementById('auto_img_cones').style.border='5px solid #ed8a92'">
+					  [Gibson et al. 2013]
+					</button>
+					<button type="button" class="cl" id="cones_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('cones_tarel').style.fontWeight='normal';
+					  document.getElementById('cones_gibson').style.fontWeight='normal';
+					  document.getElementById('cones_nishino').style.fontWeight='normal';
+					  document.getElementById('cones_dc').style.fontWeight='normal';
+					  document.getElementById('cones_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_cones','','./files/cones_cl.jpg',1);
+					  document.getElementById('auto_img_cones').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="cones_hl" onmousedown="this.style.fontWeight='bold';
+					document.getElementById('cones_tarel').style.fontWeight='normal';
+					  document.getElementById('cones_gibson').style.fontWeight='normal';
+					  document.getElementById('cones_nishino').style.fontWeight='normal';
+					  document.getElementById('cones_dc').style.fontWeight='normal';
+					  document.getElementById('cones_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_cones','','./files/cones_hl.jpg',1);
+					  document.getElementById('auto_img_cones').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/cones_hl.jpg" style="border:5px solid #4e70e0" height="384" width="512"  alt="Dehazed Image" id="auto_img_cones" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Florence</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/florence_input.jpg" style="border:5px solid black" height="519" width="1000" alt="Florence Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="florence_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('florence_cl').style.fontWeight='normal';
+					  document.getElementById('florence_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_florence','','./files/florence_dc.jpg',1);
+					  document.getElementById('auto_img_florence').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="florence_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('florence_dc').style.fontWeight='normal';
+					  document.getElementById('florence_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_florence','','./files/florence_cl.jpg',1);
+					  document.getElementById('auto_img_florence').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="florence_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('florence_dc').style.fontWeight='normal';
+					  document.getElementById('florence_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_florence','','./files/florence_hl.jpg',1);
+					  document.getElementById('auto_img_florence').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/florence_hl.jpg" style="border:5px solid #4e70e0" height="519" width="1000" alt="Dehazed Image" id="auto_img_florence" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Forest</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/forest_input.jpg" style="border:5px solid black" height="750" width="1000" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="forest_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('forest_cl').style.fontWeight='normal';
+					  document.getElementById('forest_hl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_dc').style.fontWeight='bold';
+					  document.getElementById('forest_trans_cl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_forest','','./files/forest_dc.jpg',1);
+					  document.getElementById('auto_img_forest').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_forest','','./files/forest_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_forest').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="forest_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('forest_dc').style.fontWeight='normal';
+					  document.getElementById('forest_hl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_dc').style.fontWeight='normal';
+					  document.getElementById('forest_trans_cl').style.fontWeight='bold';
+					  document.getElementById('forest_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_forest','','./files/forest_cl.jpg',1);
+					  document.getElementById('auto_img_forest').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_forest','','./files/forest_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_forest').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="forest_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('forest_dc').style.fontWeight='normal';
+					  document.getElementById('forest_cl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_dc').style.fontWeight='normal';
+					  document.getElementById('forest_trans_cl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_forest','','./files/forest_hl.jpg',1);
+					  document.getElementById('auto_img_forest').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_forest','','./files/forest_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_forest').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/forest_hl.jpg" style="border:5px solid #4e70e0" height="750" width="1000" alt="Dehazed Image" id="auto_img_forest" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="forest_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('forest_dc').style.fontWeight='bold';
+					  document.getElementById('forest_cl').style.fontWeight='normal';
+					  document.getElementById('forest_hl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_cl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_forest','','./files/forest_dc.jpg',1);
+					  document.getElementById('auto_img_forest').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_forest','','./files/forest_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_forest').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="forest_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('forest_dc').style.fontWeight='normal';
+					  document.getElementById('forest_cl').style.fontWeight='bold';
+					  document.getElementById('forest_hl').style.fontWeight='normal';
+					  document.getElementById('forest_trans_dc').style.fontWeight='normal';
+					  document.getElementById('forest_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_forest','','./files/forest_cl.jpg',1);
+					  document.getElementById('auto_img_forest').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_forest','','./files/forest_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_forest').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="forest_trans_hl" onmousedown="this.style.fontWeight='bold';;
+					  document.getElementById('forest_dc').style.fontWeight='normal';
+					  document.getElementById('forest_cl').style.fontWeight='normal';
+					  document.getElementById('forest_hl').style.fontWeight='bold';
+					  document.getElementById('forest_trans_dc').style.fontWeight='normal';
+					  document.getElementById('forest_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_forest','','./files/forest_hl.jpg',1);
+					  document.getElementById('auto_img_forest').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_forest','','./files/forest_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_forest').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/forest_trans_hl.jpg" style="border:5px solid #4e70e0" height="750" width="1000" alt="Transmission Map" id="auto_trans_forest" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Hazy Day</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/hazyDay_input.jpg" style="border:5px solid black" height="576" width="768" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="hazyDay_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('hazyDay_tang').style.fontWeight='normal';
+					  document.getElementById('hazyDay_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_hazyDay','','./files/hazyDay_dc.jpg',1);
+					  document.getElementById('auto_img_hazyDay').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="tang" id="hazyDay_tang" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('hazyDay_dc').style.fontWeight='normal';
+					  document.getElementById('hazyDay_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_hazyDay','','./files/hazyDay_learning.jpg',1);
+					  document.getElementById('auto_img_hazyDay').style.border='5px solid #c29e9b'">
+					  [Tang et al. 2014]
+					</button>
+					<button type="button" class="hl" id="hazyDay_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('hazyDay_dc').style.fontWeight='normal';
+					  document.getElementById('hazyDay_tang').style.fontWeight='normal';
+					  MM_swapImage('auto_img_hazyDay','','./files/hazyDay_hl.jpg',1);
+					  document.getElementById('auto_img_hazyDay').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/hazyDay_hl.jpg" style="border:5px solid #4e70e0" height="576" width="768" alt="Dehazed Image" id="auto_img_hazyDay" /></div></td>
+			</tr>
+		</table>
+
+		<h4>New York</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/ny17_input.jpg" style="border:5px solid black" height="750" width="1000" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="tan" id="ny17_tan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_tan.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #853e63'">
+					  [Tan 2008]
+					</button>
+					<button type="button" class="kopf" id="ny17_kopf" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_deepphoto.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #57763c'">
+					  [Kopf et al. 2008]
+					</button>
+					<button type="button" class="dc" id="ny17_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_dc.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="tarel" id="ny17_tarel" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_tarel.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #32518A'">
+					  [Tarel and Hauti&egravere 2009]
+					</button>
+					<button type="button" class="nishino" id="ny17_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_nishino.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #beeded'">
+					  [Nishino et al. 2012]
+					</button>
+					<button type="button" class="ancuti" id="ny17_ancuti" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_ancuti.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #edd580'">
+					  [Ancuti et al. 2013]
+					</button>
+					<button type="button" class="cl" id="ny17_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_cl.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="ny17_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('ny17_kopf').style.fontWeight='normal';
+					  document.getElementById('ny17_tan').style.fontWeight='normal';
+					  document.getElementById('ny17_tarel').style.fontWeight='normal';
+					  document.getElementById('ny17_dc').style.fontWeight='normal';
+					  document.getElementById('ny17_ancuti').style.fontWeight='normal';
+					  document.getElementById('ny17_nishino').style.fontWeight='normal';
+					  document.getElementById('ny17_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_ny17','','./files/ny17_hl.jpg',1);
+					  document.getElementById('auto_img_ny17').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/ny17_hl.jpg" style="border:5px solid #4e70e0" height="750" width="1000" alt="Dehazed Image" id="auto_img_ny17" /></div></td>
+			</tr>
+		</table>
+		
+		<h4>Pumpkins</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/pumpkins_input.jpg" style="border:5px solid black" height="400" width="600" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="nishino" id="pumpkins_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_hl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='bold';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_nishino.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #beeded';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_nishino.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #beeded'">
+					  nishino
+					</button>
+					<button type="button" class="dc" id="pumpkins_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_hl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='bold';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_dc.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="pumpkins_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_hl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='bold';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_cl.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="pumpkins_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_hl.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/pumpkins_hl.jpg" style="border:5px solid #4e70e0" height="400" width="600" alt="Dehazed Image" id="auto_img_pumpkins" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="nishino" id="pumpkins_trans_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='bold';
+					  document.getElementById('pumpkins_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_hl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_nishino.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #beeded';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_nishino.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #beeded'">
+					  nishino
+					</button>
+					<button type="button" class="dc" id="pumpkins_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_dc').style.fontWeight='bold';
+					  document.getElementById('pumpkins_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_hl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_dc.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="pumpkins_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_cl').style.fontWeight='bold';
+					  document.getElementById('pumpkins_hl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_cl.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="pumpkins_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('pumpkins_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_cl').style.fontWeight='normal';
+					  document.getElementById('pumpkins_hl').style.fontWeight='bold';
+					  document.getElementById('pumpkins_trans_nishino').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_dc').style.fontWeight='normal';
+					  document.getElementById('pumpkins_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_pumpkins','','./files/pumpkins_hl.jpg',1);
+					  document.getElementById('auto_img_pumpkins').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_pumpkins','','./files/pumpkins_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_pumpkins').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/pumpkins_trans_hl.jpg" style="border:5px solid #4e70e0" height="400" width="600" alt="Transmission Map" id="auto_trans_pumpkins" /></div></td>
+			</tr>
+		</table>
+
+		
+		<h4>Flags</h4>
+		<table>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="flags_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flags_cl').style.fontWeight='normal';
+					  document.getElementById('flags_hl').style.fontWeight='normal';
+					  document.getElementById('flags_blind').style.fontWeight='normal';
+					  MM_swapImage('auto_trans_flags','','./files/flags_trans_dc.png',1);
+					  document.getElementById('auto_trans_flags').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_img_flags','','./files/flags_dc.jpg',1);
+					  document.getElementById('auto_img_flags').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="flags_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flags_dc').style.fontWeight='normal';
+					  document.getElementById('flags_hl').style.fontWeight='normal';
+					  document.getElementById('flags_blind').style.fontWeight='normal';
+					  MM_swapImage('auto_trans_flags','','./files/flags_trans_cl.png',1);
+					  document.getElementById('auto_trans_flags').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_img_flags','','./files/flags_cl.jpg',1);
+					  document.getElementById('auto_img_flags').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="blind" id="flags_blind" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flags_dc').style.fontWeight='normal';
+					  document.getElementById('flags_hl').style.fontWeight='normal';
+					  document.getElementById('flags_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_trans_flags','','./files/flags_trans_blind.png',1);
+					  document.getElementById('auto_trans_flags').style.border='5px solid #beddef';
+					  MM_swapImage('auto_img_flags','','./files/flags_cl.jpg',1);
+					  document.getElementById('auto_img_flags').style.border='5px solid #beddef'">
+					  [Bahat and Irani 2016]
+					</button>
+					<button type="button" class="hl" id="flags_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flags_dc').style.fontWeight='normal';
+					  document.getElementById('flags_cl').style.fontWeight='normal';
+					  document.getElementById('flags_blind').style.fontWeight='normal';
+					  MM_swapImage('auto_trans_flags','','./files/flags_trans_hl.png',1);
+					  document.getElementById('auto_trans_flags').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_img_flags','','./files/flags_hl.jpg',1);
+					  document.getElementById('auto_img_flags').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Input Hazy Image<br /><img src="./files/flags_input.jpg" style="border:5px solid black" height="500" width="332" alt="Hazy Input"></div></td>
+				<td><div>Output Dehazed Image<br /><img src="./files/flags_hl.jpg" style="border:5px solid #4e70e0" height="500" width="332" alt="Dehazed Image" id="auto_img_flags" /></div></td>
+				<td><div>Output Transmission Map<br /><img src="./files/flags_trans_hl.png" style="border:5px solid #4e70e0" height="500" width="332" alt="Transmission Map" id="auto_trans_flags" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Swan</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/swan_input.jpg" style="border:5px solid black" height="416" width="624" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="tan" id="swan_tan" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('swan_dc').style.fontWeight='normal';
+					  document.getElementById('swan_tarel').style.fontWeight='normal';
+					  document.getElementById('swan_nishino').style.fontWeight='normal';
+					  document.getElementById('swan_cl').style.fontWeight='normal';
+					  document.getElementById('swan_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_swan','','./files/swan_tan.jpg',1);
+					  document.getElementById('auto_img_swan').style.border='5px solid #853e63'">
+					  [Tan 2008]
+					</button>
+					<button type="button" class="dc" id="swan_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('swan_tan').style.fontWeight='normal';
+					  document.getElementById('swan_tarel').style.fontWeight='normal';
+					  document.getElementById('swan_nishino').style.fontWeight='normal';
+					  document.getElementById('swan_cl').style.fontWeight='normal';
+					  document.getElementById('swan_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_swan','','./files/swan_dc.jpg',1);
+					  document.getElementById('auto_img_swan').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="tarel" id="swan_tarel" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('swan_dc').style.fontWeight='normal';
+					  document.getElementById('swan_tan').style.fontWeight='normal';
+					  document.getElementById('swan_nishino').style.fontWeight='normal';
+					  document.getElementById('swan_cl').style.fontWeight='normal';
+					  document.getElementById('swan_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_swan','','./files/swan_GraylevelTarelHautiere.jpg',1);
+					  document.getElementById('auto_img_swan').style.border='5px solid #32518A'">
+					  [Tarel and Hauti&egravere 2009]
+					</button>
+					<button type="button" class="nishino" id="swan_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('swan_dc').style.fontWeight='normal';
+					  document.getElementById('swan_tan').style.fontWeight='normal';
+					  document.getElementById('swan_tarel').style.fontWeight='normal';
+					  document.getElementById('swan_cl').style.fontWeight='normal';
+					  document.getElementById('swan_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_swan','','./files/swan_nishino.jpg',1);
+					  document.getElementById('auto_img_swan').style.border='5px solid #beeded'">
+					  [Nishino et al. 2012]
+					</button>
+					<button type="button" class="cl" id="swan_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('swan_tan').style.fontWeight='normal';
+					  document.getElementById('swan_tarel').style.fontWeight='normal';
+					  document.getElementById('swan_dc').style.fontWeight='normal';
+					  document.getElementById('swan_nishino').style.fontWeight='normal';
+					  document.getElementById('swan_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_swan','','./files/swan_cl.jpg',1);
+					  document.getElementById('auto_img_swan').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="swan_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('swan_tan').style.fontWeight='normal';
+					  document.getElementById('swan_tarel').style.fontWeight='normal';
+					  document.getElementById('swan_dc').style.fontWeight='normal';
+					  document.getElementById('swan_nishino').style.fontWeight='normal';
+					  document.getElementById('swan_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_swan','','./files/swan_hl.jpg',1);
+					  document.getElementById('auto_img_swan').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/swan_hl.jpg" style="border:5px solid #4e70e0" height="416" width="624" alt="Dehazed Image" id="auto_img_swan" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Train</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/train_input.jpg" style="border:5px solid black" height="400" width="600" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="train_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('train_ancuti').style.fontWeight='normal';
+					  document.getElementById('train_cl').style.fontWeight='normal';
+					  document.getElementById('train_osa').style.fontWeight='normal';
+					  document.getElementById('train_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_train','','./files/train_dc.jpg',1);
+					  document.getElementById('auto_img_train').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="ancuti" id="train_ancuti" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('train_dc').style.fontWeight='normal';
+					  document.getElementById('train_osa').style.fontWeight='normal';
+					  document.getElementById('train_cl').style.fontWeight='normal';
+					  document.getElementById('train_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_train','','./files/train_ancuti.jpg',1);
+					  document.getElementById('auto_img_train').style.border='5px solid #edd580'">
+					  [Ancuti et al. 2013]
+					</button>
+					<button type="button" class="cl" id="train_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('train_osa').style.fontWeight='normal';
+					  document.getElementById('train_dc').style.fontWeight='normal';
+					  document.getElementById('train_ancuti').style.fontWeight='normal';
+					  document.getElementById('train_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_train','','./files/train_cl.jpg',1);
+					  document.getElementById('auto_img_train').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="osa" id="train_osa" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('train_dc').style.fontWeight='normal';
+					  document.getElementById('train_ancuti').style.fontWeight='normal';
+					  document.getElementById('train_cl').style.fontWeight='normal';
+					  document.getElementById('train_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_train','','./files/train_osa.jpg',1);
+					  document.getElementById('auto_img_train').style.border='5px solid #9d70bf'">
+					  [Luz&oacuten-Gonz&aacutelez et al. 2014]
+					</button>
+					<button type="button" class="hl" id="train_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('train_osa').style.fontWeight='normal';
+					  document.getElementById('train_dc').style.fontWeight='normal';
+					  document.getElementById('train_ancuti').style.fontWeight='normal';
+					  document.getElementById('train_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_train','','./files/train_hl.jpg',1);
+					  document.getElementById('auto_img_train').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/train_hl.jpg" style="border:5px solid #4e70e0" height="400" width="600" alt="Dehazed Image" id="auto_img_train" /></div></td>
+			</tr>
+		</table>
+
+		<h4>House</h4>
+		<table>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="dc" id="house_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_tang').style.fontWeight='normal';
+					  document.getElementById('house_tarel').style.fontWeight='normal';
+					  document.getElementById('house_nishino').style.fontWeight='normal';
+					  document.getElementById('house_gibson').style.fontWeight='normal';
+					  document.getElementById('house_cl').style.fontWeight='normal';
+					  document.getElementById('house_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_dc.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="tarel" id="house_tarel" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_nishino').style.fontWeight='normal';
+					  document.getElementById('house_tang').style.fontWeight='normal';
+					  document.getElementById('house_dc').style.fontWeight='normal';
+					  document.getElementById('house_gibson').style.fontWeight='normal';
+					  document.getElementById('house_cl').style.fontWeight='normal';
+					  document.getElementById('house_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_GraylevelTarelHautiere.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #32518A'">
+					  [Tarel and Hauti&egravere 2009]
+					</button>
+					<button type="button" class="nishino" id="house_nishino" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_dc').style.fontWeight='normal';
+					  document.getElementById('house_tarel').style.fontWeight='normal';
+					  document.getElementById('house_tang').style.fontWeight='normal';
+					  document.getElementById('house_cl').style.fontWeight='normal';
+					  document.getElementById('house_gibson').style.fontWeight='normal';
+					  document.getElementById('house_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_nishino.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #beeded'">
+					  [Nishino et al. 2012]
+					</button>
+					<button type="button" class="gibson" id="house_gibson" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_dc').style.fontWeight='normal';
+					  document.getElementById('house_tarel').style.fontWeight='normal';
+					  document.getElementById('house_tang').style.fontWeight='normal';
+					  document.getElementById('house_cl').style.fontWeight='normal';
+					  document.getElementById('house_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_colorEllipsoid.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #ed8a92'">
+					  [Gibson et al. 2013]
+					</button>
+					<button type="button" class="tang" id="house_tang" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_dc').style.fontWeight='normal';
+					  document.getElementById('house_tarel').style.fontWeight='normal';
+					  document.getElementById('house_nishino').style.fontWeight='normal';
+					  document.getElementById('house_gibson').style.fontWeight='normal';
+					  document.getElementById('house_cl').style.fontWeight='normal';
+					  document.getElementById('house_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_learning.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #c29e9b'">
+					  [Tang et al. 2014]
+					</button>
+					<button type="button" class="cl" id="house_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_tang').style.fontWeight='normal';
+					  document.getElementById('house_tarel').style.fontWeight='normal';
+					  document.getElementById('house_dc').style.fontWeight='normal';
+					  document.getElementById('house_nishino').style.fontWeight='normal';
+					  document.getElementById('house_gibson').style.fontWeight='normal';
+					  document.getElementById('house_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_cl.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="house_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('house_tang').style.fontWeight='normal';
+					  document.getElementById('house_tarel').style.fontWeight='normal';
+					  document.getElementById('house_gibson').style.fontWeight='normal';
+					  document.getElementById('house_dc').style.fontWeight='normal';
+					  document.getElementById('house_nishino').style.fontWeight='normal';
+					  document.getElementById('house_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_house','','./files/house_hl.jpg',1);
+					  document.getElementById('auto_img_house').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/house_hl.jpg" style="border:5px solid #4e70e0" height="448" width="440" alt="Dehazed Image" id="auto_img_house" /></div></td>
+						<td><div>Input Hazy Image<br /><img src="./files/house_input.jpg" style="border:5px solid black" height="448" width="440" alt="Hazy Input"></div></td>
+			</tr>
+		</table>
+
+<!------------------------------------------------------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------------------------------------------------------>
+		<HR>
+
+		<a name="Synthetic"> </a><h3>Synthetic Images</h3>
+
+		<p>
+		A synthetic dataset of hazy images of natural scenes was introduced by [Fattal 2014], and is available online. The dataset contains eleven haze free images, synthetic distance maps and corresponding simulated haze images. The following table summarizes the L1 errors on non-sky pixels (same metric used in [Fattal 2014]) of the transmission maps and the dehazed images. Our method is compared to the method of [Fattal 2014] and an implementation of [He et al. 2009] by [Fattal 2014]. 
+		</p>
+
+		<div align="center">Table: L1 errors of transmission maps and dehazed images<br /><img src="./files/L1_errors.png"  height="399" width="820"><br></div>
+		
+		<p ><br>
+		The transmission maps are displayed along with the images. They are color-mapped: warm colors indicate high values, while cold color indicate low values.<br>
+		Please note that the buttons on the left switch both the image and the transmission map. 
+		</p>
+
+
+		<h4>Flower 1</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/flower1_input.jpg" style="border:5px solid black" height="540" width="960" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="flower1_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_hl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_true').style.fontWeight='bold';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_true.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_true.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="flower1_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='normal';
+					  document.getElementById('flower1_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_hl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_true').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='bold';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_dc.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="flower1_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='normal';
+					  document.getElementById('flower1_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_hl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_true').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='bold';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_flower1','','./files/flower1_cl.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="flower1_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='normal';
+					  document.getElementById('flower1_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_true').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_hl.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/flower1_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Dehazed Image" id="auto_img_flower1" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="flower1_trans_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='bold';
+					  document.getElementById('flower1_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_hl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_true.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_true.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="flower1_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='normal';
+					  document.getElementById('flower1_dc').style.fontWeight='bold';
+					  document.getElementById('flower1_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_hl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_true').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_dc.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="flower1_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='normal';
+					  document.getElementById('flower1_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_cl').style.fontWeight='bold';
+					  document.getElementById('flower1_hl').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_true').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_cl.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="flower1_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('flower1_true').style.fontWeight='normal';
+					  document.getElementById('flower1_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_cl').style.fontWeight='normal';
+					  document.getElementById('flower1_hl').style.fontWeight='bold';
+					  document.getElementById('flower1_trans_true').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_dc').style.fontWeight='normal';
+					  document.getElementById('flower1_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_flower1','','./files/flower1_hl.jpg',1);
+					  document.getElementById('auto_img_flower1').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_flower1','','./files/flower1_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_flower1').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/flower1_trans_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Transmission Map" id="auto_trans_flower1" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Lawn 2</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/lawn2_input.jpg" style="border:5px solid black" height="540" width="960" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="lawn2_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_hl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='bold';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_true.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_true.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="lawn2_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_hl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='bold';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_dc.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="lawn2_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_hl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='bold';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_cl.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="lawn2_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_hl.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/lawn2_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Dehazed Image" id="auto_img_lawn2" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="lawn2_trans_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='bold';
+					  document.getElementById('lawn2_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_hl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_true.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_true.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="lawn2_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_dc').style.fontWeight='bold';
+					  document.getElementById('lawn2_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_hl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_dc.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="lawn2_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_cl').style.fontWeight='bold';
+					  document.getElementById('lawn2_hl').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_cl.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="lawn2_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn2_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_cl').style.fontWeight='normal';
+					  document.getElementById('lawn2_hl').style.fontWeight='bold';
+					  document.getElementById('lawn2_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn2_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn2','','./files/lawn2_hl.jpg',1);
+					  document.getElementById('auto_img_lawn2').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_lawn2','','./files/lawn2_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_lawn2').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/lawn2_trans_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Transmission Map" id="auto_trans_lawn2" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Road2</h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Hazy Image<br /><img src="./files/road2_input.jpg" style="border:5px solid black" height="540" width="960" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="road2_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_dc').style.fontWeight='normal';
+					  document.getElementById('road2_cl').style.fontWeight='normal';
+					  document.getElementById('road2_hl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_true').style.fontWeight='bold';
+					  document.getElementById('road2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('road2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_road2','','./files/road2_true.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_true.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="road2_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='normal';
+					  document.getElementById('road2_cl').style.fontWeight='normal';
+					  document.getElementById('road2_hl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_true').style.fontWeight='normal';
+					  document.getElementById('road2_trans_dc').style.fontWeight='bold';
+					  document.getElementById('road2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_road2','','./files/road2_dc.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="road2_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='normal';
+					  document.getElementById('road2_dc').style.fontWeight='normal';
+					  document.getElementById('road2_hl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_true').style.fontWeight='normal';
+					  document.getElementById('road2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('road2_trans_cl').style.fontWeight='bold';
+					  document.getElementById('road2_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_road2','','./files/road2_cl.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="road2_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='normal';
+					  document.getElementById('road2_dc').style.fontWeight='normal';
+					  document.getElementById('road2_cl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_true').style.fontWeight='normal';
+					  document.getElementById('road2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('road2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_road2','','./files/road2_hl.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/road2_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Dehazed Image" id="auto_img_road2" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="road2_trans_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='bold';
+					  document.getElementById('road2_dc').style.fontWeight='normal';
+					  document.getElementById('road2_cl').style.fontWeight='normal';
+					  document.getElementById('road2_hl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('road2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_road2','','./files/road2_true.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_true.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="road2_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='normal';
+					  document.getElementById('road2_dc').style.fontWeight='bold';
+					  document.getElementById('road2_cl').style.fontWeight='normal';
+					  document.getElementById('road2_hl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_true').style.fontWeight='normal';
+					  document.getElementById('road2_trans_cl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_road2','','./files/road2_dc.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="road2_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='normal';
+					  document.getElementById('road2_dc').style.fontWeight='normal';
+					  document.getElementById('road2_cl').style.fontWeight='bold';
+					  document.getElementById('road2_hl').style.fontWeight='normal';
+					  document.getElementById('road2_trans_true').style.fontWeight='normal';
+					  document.getElementById('road2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('road2_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_road2','','./files/road2_cl.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="road2_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('road2_true').style.fontWeight='normal';
+					  document.getElementById('road2_dc').style.fontWeight='normal';
+					  document.getElementById('road2_cl').style.fontWeight='normal';
+					  document.getElementById('road2_hl').style.fontWeight='bold';
+					  document.getElementById('road2_trans_true').style.fontWeight='normal';
+					  document.getElementById('road2_trans_dc').style.fontWeight='normal';
+					  document.getElementById('road2_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_road2','','./files/road2_hl.jpg',1);
+					  document.getElementById('auto_img_road2').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_road2','','./files/road2_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_road2').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/road2_trans_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Transmission Map" id="auto_trans_road2" /></div></td>
+			</tr>
+		</table>
+
+
+<!------------------------------------------------------------------------------------------------------------------------------>
+		<HR> 
+
+		<a name="Noisy"> </a><h3>Noisy Synthetic Images</h3>
+
+		<h4>Church, &sigma;=0.05 </h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Noisy and Hazy Image<br /><img src="./files/church_S50_input.jpg" style="border:5px solid black" height="652" width="1000" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="church_S50_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_hl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='bold';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_known.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_true.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="church_S50_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_hl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='bold';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_dc.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="church_S50_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_hl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='bold';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_cl.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="church_S50_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_hl.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/church_S50_hl.jpg" style="border:5px solid #4e70e0" height="652" width="1000" alt="Dehazed Image" id="auto_img_church_S50" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="church_S50_trans_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='bold';
+					  document.getElementById('church_S50_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_hl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_known.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_true.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="church_S50_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_dc').style.fontWeight='bold';
+					  document.getElementById('church_S50_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_hl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_dc.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="church_S50_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_cl').style.fontWeight='bold';
+					  document.getElementById('church_S50_hl').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_cl.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="church_S50_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('church_S50_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_cl').style.fontWeight='normal';
+					  document.getElementById('church_S50_hl').style.fontWeight='bold';
+					  document.getElementById('church_S50_trans_true').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_dc').style.fontWeight='normal';
+					  document.getElementById('church_S50_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_church_S50','','./files/church_S50_hl.jpg',1);
+					  document.getElementById('auto_img_church_S50').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_church_S50','','./files/church_S50_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_church_S50').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/church_S50_trans_hl.jpg" style="border:5px solid #4e70e0" height="652" width="1000" alt="Transmission Map" id="auto_trans_church_S50" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Lawn1, &sigma;=0.025 </h4>
+		<table>
+			<tr>
+				<td></td>
+				<td><div>Input Noisy and Hazy Image<br /><img src="./files/lawn1_S25_input.jpg" style="border:5px solid black"height="540" width="960" alt="Hazy Input"></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="lawn1_S25_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_known.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_true.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="lawn1_S25_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_dc.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="lawn1_S25_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='normal';			  
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_cl.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="lawn1_S25_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='bold';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_hl.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Dehazed Image<br /><img src="./files/lawn1_S25_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Dehazed Image" id="auto_img_lawn1_S25" /></div></td>
+			</tr>
+			<tr>
+				<td valign ="top">
+					Dehazing Methods
+					<br />
+					<button type="button" class="true" id="lawn1_S25_trans_true" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_known.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #e32646';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_true.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #e32646'">
+					  True
+					</button>
+					<button type="button" class="dc" id="lawn1_S25_trans_dc" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_dc.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #fa9d5f';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_dc.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #fa9d5f'">
+					  [He et al. 2009]
+					</button>
+					<button type="button" class="cl" id="lawn1_S25_trans_cl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_hl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_cl.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #62a88d';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_cl.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #62a88d'">
+					  [Fattal 2014]
+					</button>
+					<button type="button" class="hl" id="lawn1_S25_trans_hl" onmousedown="this.style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_cl').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_hl').style.fontWeight='bold';
+					  document.getElementById('lawn1_S25_trans_true').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_dc').style.fontWeight='normal';
+					  document.getElementById('lawn1_S25_trans_cl').style.fontWeight='normal';
+					  MM_swapImage('auto_img_lawn1_S25','','./files/lawn1_S25_hl.jpg',1);
+					  document.getElementById('auto_img_lawn1_S25').style.border='5px solid #4e70e0';
+					  MM_swapImage('auto_trans_lawn1_S25','','./files/lawn1_S25_trans_hl.jpg',1);
+					  document.getElementById('auto_trans_lawn1_S25').style.border='5px solid #4e70e0'">
+					  Our result
+					</button>
+				</td>
+				<td><div>Output Transmission Map<br /><img src="./files/lawn1_S25_trans_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Transmission Map" id="auto_trans_lawn1_S25" /></div></td>
+			</tr>
+		</table>
+
+		<h4>Road1, &sigma;=0.05 </h4>
+		<table>
+	<tr>
+		<td></td>
+		<td><div>Input Noisy and Hazy Image<br /><img src="./files/road1_S50_input.jpg" style="border:5px solid black" height="540" width="960" alt="Hazy Input"></div></td>
+	</tr>
+	<tr>
+		<td valign ="top">
+			Dehazing Methods
+			<br />
+			<button type="button" class="true" id="road1_S50_true" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_hl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_true').style.fontWeight='bold';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='normal';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_known.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #e32646';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_true.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #e32646'">
+			  True
+			</button>
+			<button type="button" class="dc" id="road1_S50_dc" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_hl').style.fontWeight='normal';
+  			  document.getElementById('road1_S50_trans_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='bold';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='normal';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_dc.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #fa9d5f';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_dc.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #fa9d5f'">
+			  [He et al. 2009]
+			</button>
+			<button type="button" class="cl" id="road1_S50_cl" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_hl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='bold';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='normal';			  
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_cl.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #62a88d';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_cl.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #62a88d'">
+			  [Fattal 2014]
+			</button>
+			<button type="button" class="hl" id="road1_S50_hl" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_cl').style.fontWeight='normal';
+  			  document.getElementById('road1_S50_trans_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='bold';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_hl.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #4e70e0';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_hl.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #4e70e0'">
+			  Our result
+			</button>
+		</td>
+		<td><div>Output Dehazed Image<br /><img src="./files/road1_S50_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Dehazed Image" id="auto_img_road1_S50" /></div></td>
+	</tr>
+	<tr>
+		<td valign ="top">
+			Dehazing Methods
+			<br />
+			<button type="button" class="true" id="road1_S50_trans_true" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='bold';
+			  document.getElementById('road1_S50_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_hl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='normal';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_known.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #e32646';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_true.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #e32646'">
+			  True
+			</button>
+			<button type="button" class="dc" id="road1_S50_trans_dc" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_dc').style.fontWeight='bold';
+			  document.getElementById('road1_S50_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_hl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='normal';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_dc.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #fa9d5f';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_dc.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #fa9d5f'">
+			  [He et al. 2009]
+			</button>
+			<button type="button" class="cl" id="road1_S50_trans_cl" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_cl').style.fontWeight='bold';
+			  document.getElementById('road1_S50_hl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_hl').style.fontWeight='normal';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_cl.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #62a88d';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_cl.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #62a88d'">
+			  [Fattal 2014]
+			</button>
+			<button type="button" class="hl" id="road1_S50_trans_hl" onmousedown="this.style.fontWeight='bold';
+			  document.getElementById('road1_S50_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_cl').style.fontWeight='normal';
+			  document.getElementById('road1_S50_hl').style.fontWeight='bold';
+			  document.getElementById('road1_S50_trans_true').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_dc').style.fontWeight='normal';
+			  document.getElementById('road1_S50_trans_cl').style.fontWeight='normal';
+			  MM_swapImage('auto_img_road1_S50','','./files/road1_S50_hl.jpg',1);
+			  document.getElementById('auto_img_road1_S50').style.border='5px solid #4e70e0';
+			  MM_swapImage('auto_trans_road1_S50','','./files/road1_S50_trans_hl.jpg',1);
+			  document.getElementById('auto_trans_road1_S50').style.border='5px solid #4e70e0'">
+			  Our result
+			</button>
+		</td>
+		<td><div>Output Transmission Map<br /><img src="./files/road1_S50_trans_hl.jpg" style="border:5px solid #4e70e0" height="540" width="960" alt="Transmission Map" id="auto_trans_road1_S50" /></div></td>
+	</tr>
+</table>
+
+
+<!------------------------------------------------------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------------------------------------------------------>
+		<HR>
+
+		<a name="References"></a><h3>References</h3>
+
+		<p>
+		<span style="background-color: #853e63"><b>[Tan 2008]</b></span> TAN, R. 2008. Visibility in bad weather from a single image. In <i>CVPR</i>.<br>
+		<span style="background-color: #57763c"><b>[Kopf et al. 2008]</b></span> KOPF, J., NEUBERT, B., CHEN, B., COHEN, M., COHEN-OR, D., DEUSSEN, O., UYTTENDAELE, M., AND LISCHINSKI, D. 2008. Deep photo: Model-based photograph enhancement and viewing. <i>ACM Trans. Graph.</i> 27, 5, 116.<br>
+		<span style="background-color: #32518A"><b>[Tarel and Hauti&egravere 2009]</b></span> TAREL J. P., AND HAUTI&EgraveRE N. 2009. Fast visibility restoration from a single color or gray level image. In <i>ICCV</i>.<br>
+		<span style="background-color: #fa9d5f"><b>[He et al. 2009]</b></span> HE, K., SUN, J., AND TANG, X. 2009. Single image haze removal using dark channel prior. In <i>CVPR</i>.<br>
+		<span style="background-color: #beeded"><b>[Nishino et al. 2012]</b></span> NISHINO, K., KRATZ, L., AND LOMBARDI, S. 2012. Bayesian defogging. <i>IJCV</i>, 98, 3, 263-278.<br>
+		<span style="background-color: #edd580"><b>[Ancuti et al. 2013]</b></span> ANCUTI, C. O., AND ANCUTI, C. 2013. Single image dehazing by multi-scale fusion. <i>IEEE Trans. on Image Processing</i>, 22, 8, 3271-3282.<br>
+		<span style="background-color: #ed8a92"><b>[Gibson et al. 2013]</b></span> GIBSON, K.B, AND NGUYEN, T.Q. 2013. An analysis of single image defogging methods using a color ellipsoid framework. <i>EURASIP Journal on Image and Video Processing</i>.<br>
+		<span style="background-color: #c29e9b"><b>[Tang et al. 2014]</b></span> TANG, K., YANG, J., AND WANG, J. 2014. Investigating haze-relevant features in a learning framework for image dehazing. In <i>CVPR</i>.<br>
+		<span style="background-color: #62a88d"><b>[Fattal 2014]</b></span> FATTAL, R. 2014. Dehazing using color-lines. <i>ACM Trans. Graph.</i> 34, 1, 13.<br>
+		<span style="background-color: #9d70bf"><b>[Luz&oacuten-Gonz&aacutelez et al. 2014]</b></span> LUZ&OacuteN-GONZ&AacuteLEZ, R., NIEVES, J. L., AND ROMERO, J. 2014. Recovering of weather degraded images based on RGB response ratio constancy. <i>Appl. Opt.</i><br>
+		<span style="background-color: #beddef"><b>[Bahat and Irani 2016]</b></span> Bahat, Y. and Irani, M. 2016. Blind Dehazing Using Internal Patch Recurrence. In <i>ICCP</i>.<br>
+		</p>
+
+
+</div>
+</body>
+</html>
