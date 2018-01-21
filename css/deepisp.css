@@ -1,0 +1,141 @@
+h1 {
+	margin-bottom: 0.2em;
+	margin-top: 1em;
+}
+	
+h2 {
+
+}
+
+h3 {
+	margin-bottom: 1em;
+}
+
+h4 {
+	font-weight: bold;
+	font-size: 20px;
+	margin-top: 3em;
+	margin-left: 145px;
+	margin-bottom: 0.5em;
+}
+
+p {
+}
+
+@media (max-width: 900px) {
+    body { 
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+	.container {
+      padding:0;
+      margin:0;
+    }
+}
+
+
+/*table {
+    border-spacing: 30px 15px;
+}*/
+
+
+td {
+	line-height: 150%;
+	padding:10px 0px 10px 10px;
+}
+
+td:first-child {padding-left:0px;}
+
+button {
+	/*Basic Button Styles*/
+    display: block;
+    height: 60px;
+    width: 136px;
+    background: #34696f;
+    border: 2px solid rgba(33, 68, 72, 0.59);
+	cursor:pointer;
+	margin-bottom: 5px;
+	
+	/*Text Styles*/
+	color: black;
+    text-align: left;
+	font-size: 1.1em;
+}
+
+button.Original {
+    background: #773333 ;
+    border: 2px solid black;
+	color: white
+}
+button.ColorQuantized {
+    background: #BEBcAb ;
+    border: 2px solid black;
+}
+
+button.tan {
+    background: #853e63 ; /*#b5d8c2;*/
+    border: 2px solid black;
+}
+
+button.nishino {
+    background: #beeded;
+    border: 2px solid black;
+}
+
+button.ancuti {
+    background: #edd580;
+    border: 2px solid black;
+}
+
+button.gibson {
+    background: #ed8a92;
+    border: 2px solid black;
+}
+
+button.osa {
+    background: #9d70bf;
+    border: 2px solid black;
+}
+
+button.tarel {
+    background: #32518A;
+    border: 2px solid black;
+}
+
+button.tang {
+    background: #c29e9b;
+    border: 2px solid black;
+}
+
+button.kopf {
+    background: #57763c;
+    border: 2px solid black;
+}
+
+button.true {
+    background: #e32646;
+    border: 2px solid black;
+}
+
+button.dc {
+    background: #fa9d5f;
+    border: 2px solid black;
+}
+
+button.cl {
+    background: #62a88d;
+    border: 2px solid black;
+}
+
+button.hl {
+    background: #4e70e0;
+    border: 2px solid black;
+}
+
+button.blind {
+    background: #beddef;
+    border: 2px solid black;
+}
+
+</style>
+
